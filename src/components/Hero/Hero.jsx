@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import Image1 from "../../assets/Img/women.png";
 import Image2 from "../../assets/Img/shopping.png";
 import Image3 from "../../assets/Img/sale.png";
 import Slider from "react-slick";
+import { useNavigate } from "react-router-dom";
 
 const ImageList = [
     {
         id: 1,
+        category: "Men Wear",
         img: Image1,
         title: "Upto 50% off on all Men's Wear",
         description:
@@ -15,6 +17,7 @@ const ImageList = [
     {
         id: 2,
         img: Image2,
+        category: "Women Wear",
         title: "30% off on all Women's Wear",
         description:
             "Who's there lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -22,6 +25,7 @@ const ImageList = [
     {
         id: 3,
         img: Image3,
+        category: "All Products",
         title: "70% off on all Products Sale",
         description:
             "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -29,6 +33,12 @@ const ImageList = [
 ];
 
 const Hero = () => {
+    const [categoryId, setcategoryId] = useState(null);
+    const navigate = useNavigate();
+    const handleClick = (id) => {
+
+        navigate(`/category/${id}`);
+    }
     var settings = {
         dots: false,
         arrows: false,
@@ -47,7 +57,7 @@ const Hero = () => {
             {/* background pattern */}
             <div className="h-[700px] w-[700px] bg-primary/40 absolute -top-1/2 right-0 rounded-3xl rotate-45 -z[8]"></div>
             {/* hero section */}
-            <div className="container pb-8 sm:pb-0">
+            <div className="container pb-8 sm:pb-0 mb-8">
                 <Slider {...settings}>
                     {ImageList.map((data) => (
                         <div>
@@ -76,10 +86,10 @@ const Hero = () => {
                                         data-aos-delay="300"
                                     >
                                         <button
-
+                                            onClick={() => handleClick(data.category)}
                                             className="bg-gradient-to-r from-primary to-secondary hover:scale-105 duration-200 text-white py-2 px-4 rounded-full"
                                         >
-                                            Order Now
+                                            View Now
                                         </button>
                                     </div>
                                 </div>

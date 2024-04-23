@@ -1,11 +1,43 @@
-import React from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Logo from '../../assets/Img/logo.png'
 import { IoMdSearch } from "react-icons/io";
 import { FaCartShopping } from "react-icons/fa6";
 import { FaCaretDown } from "react-icons/fa";
 
 import DarkMode from './DarkMode';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/Context';
+import Cookie from 'universal-cookie';
+import { BiUserCircle } from 'react-icons/bi';
+import { jwtDecode } from 'jwt-decode';
+import { getUser } from '../../helper/getData';
+import { getSearchedProducts } from '../../helper/sendData';
 const Navbar = () => {
+
+    useEffect(() => {
+        const fetchDetails = async () => {
+            try {
+                const token = cookies.get('token_auth');
+                console.log('Token:', token);
+                if (token) {
+                    const decoded = jwtDecode(token);
+                    const response = await getUser(decoded.id);
+                    console.log('User details:', response.user);
+                    if (response.user.role === 'admin') {
+                        setUser(response.user);
+                        navigate('/admin');
+                    }
+                    setUser(response.user);
+                }
+            } catch (error) {
+                console.error('Token not found:', error);
+            }
+        };
+        fetchDetails();
+    }, []);
+    const cookies = new Cookie();
+    const { user, setUser } = useContext(UserContext);
+    const navigate = useNavigate();
     const Options = [
         {
             id: 1,
@@ -15,41 +47,60 @@ const Navbar = () => {
         {
             id: 2,
             name: "Top Rated",
-            link: "/#services",
+            link: "/category/Top Rated",
         },
         {
             id: 3,
             name: "Kids Wear",
-            link: "/#",
+            link: "/category/Kids Wear",
+
         },
         {
-            id: 3,
+            id: 4,
             name: "Mens Wear",
-            link: "/#",
+            link: "/category/Men Wear",
+
         },
         {
-            id: 3,
+            id: 5,
             name: "Electronics",
-            link: "/#",
+            link: "/category/Electronics",
         },
     ];
     const DropdownLinks = [
         {
             id: 1,
             name: "Trending Products",
-            link: "/#",
+            link: "/category/Trending Products",
         },
         {
             id: 2,
             name: "Best Selling",
-            link: "/#",
+            link: "/category/Best Selling",
         },
         {
             id: 3,
             name: "Top Rated",
-            link: "/#",
+            link: "/category/Top Rated",
         },
     ];
+    const [searchTerm, setSearchTerm] = useState('');
+
+
+    const handleSearchSubmit = async (e) => {
+        e.preventDefault(); // Prevent default form submission behavior
+        if (searchTerm) {
+            try {
+                const response = await getSearchedProducts(searchTerm); // Make request to backend API
+                const { products } = response.data;
+                const search = "searchTerm";
+                // Redirect to search page with query param
+                navigate(`/category/${search}`, { state: { products } });
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+            }
+        }
+    };
     return (
         <div className="shadow-md bg-white dark:bg-gray-900 dark:text-white duration-200 relative z-40">
             {/* Upper Navbar */}
@@ -64,23 +115,46 @@ const Navbar = () => {
                     {/* Search and cart option */}
                     <div className="flex justify-between items-center gap-4">
                         <div className="relative group hidden sm:block">
-                            <input type="text" placeholder="Search" className="w-[200px] sm:w-[200px] group-hover:w-[300px] transition-all duration-300 rounded-full border border-gray-300 px-2 py-1 focus:outline-none focus:border-1 focus:border-primary dark:border-gray-500 dark:bg-gray-800  " />
-                            <IoMdSearch className="text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3" />
+                            <form onSubmit={handleSearchSubmit}>
+                                <input
+                                    type="text"
+                                    placeholder="Search"
+                                    className="w-[200px] sm:w-[200px] group-hover:w-[300px] transition-all duration-300 rounded-full border border-gray-300 px-2 py-1 focus:outline-none focus:border-1 focus:border-primary dark:border-gray-500 dark:bg-gray-800"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <IoMdSearch
+                                    onClick={handleSearchSubmit}
+                                    className="text-gray-500 group-hover:text-primary absolute top-1/2 -translate-y-1/2 right-3"
+                                />
+                            </form>
                         </div>
-                        {/* order button */}
                         <button
-
+                            onClick={() => navigate(`/cart`)}
                             className="bg-gradient-to-r from-primary to-secondary transition-all duration-200 text-white  py-1 px-4 rounded-full flex items-center gap-3 group"
                         >
                             <span className="group-hover:block hidden transition-all duration-200">
-                                Order
+                                Cart
                             </span>
                             <FaCartShopping className="text-xl text-white drop-shadow-sm cursor-pointer" />
                         </button>
-                        {/* Dark Mode Toggel */}
-                        <div>
-                            <DarkMode />
-                        </div>
+
+                        {user ? ( // Check if user is logged in
+
+                            <button
+                                onClick={() => navigate('/profile')} // Navigate to profile page
+                                className="flex items-center gap-[2px] py-2 bg-transparent border border-primary hover:bg-primary/20 hover:text-primary rounded-full px-3 focus:outline-none focus:border-2 focus:border-primary">
+                                <BiUserCircle className="text-xl text-primary drop-shadow-sm" />
+                            </button>
+
+                        ) : (
+                            <button
+                                onClick={() => navigate('/login')}
+                                className="bg-transparent border border-primary hover:bg-primary/20 hover:text-primary px-4 py-1 rounded-md text-sm font-medium flex items-center gap-1"
+                            >
+                                <span>Sign In</span>
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -89,12 +163,16 @@ const Navbar = () => {
                 <ul className="sm:flex hidden items-center gap-4">
                     {Options.map((data) => (
                         <li key={data.id}>
-                            <a
-                                href={data.link}
+                            <button
+                                onClick={() => {
+
+                                    navigate(data.link);
+                                }}
+
                                 className="inline-block px-4 hover:text-primary duration-200"
                             >
                                 {data.name}
-                            </a>
+                            </button>
                         </li>
                     ))}
                     {/* Simple Dropdown and Links */}
@@ -109,12 +187,14 @@ const Navbar = () => {
                             <ul>
                                 {DropdownLinks.map((data) => (
                                     <li key={data.id}>
-                                        <a
-                                            href={data.link}
+                                        <button
+                                            onClick={() => {
+                                                navigate(data.link);
+                                            }}
                                             className="inline-block w-full rounded-md p-2 hover:bg-primary/20 "
                                         >
                                             {data.name}
-                                        </a>
+                                        </button>
                                     </li>
                                 ))}
                             </ul>
